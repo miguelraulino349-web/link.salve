@@ -1,0 +1,171 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Meu Bloco de Links</title>
+<style>
+*{box-sizing:border-box}
+body{
+  margin:0;padding:20px;
+  background:#0d0d16;color:white;
+  font-family:Arial,sans-serif;
+}
+.container{max-width:600px;margin:auto}
+h1{text-align:center;color:#a78bfa}
+p{color:#b8b8c9;text-align:center}
+textarea{
+  width:100%;height:150px;padding:14px;
+  background:#191927;color:white;
+  border:1px solid #383850;border-radius:12px;
+  font-size:15px;resize:vertical;
+}
+button{
+  border:0;border-radius:9px;padding:12px;
+  font-weight:bold;cursor:pointer;
+}
+.add{width:100%;margin:10px 0;background:#8b5cf6;color:white}
+.item{
+  background:#191927;padding:14px;margin:12px 0;
+  border:1px solid #33334a;border-radius:12px;
+  overflow-wrap:anywhere;
+}
+.nome{font-weight:bold;font-size:17px;margin-bottom:8px}
+.url{color:#aaaacc;font-size:12px;margin-bottom:12px}
+.abrir{background:#22c55e;color:#07150b}
+.apagar{background:#ef4444;color:white;float:right}
+.vazio{text-align:center;color:#777;margin-top:25px}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>🔗 Meu Bloco de Links</h1>
+  <p>Salve seus links favoritos em um só lugar!</p>
+
+  <h3>📝 Adicionar links</h3>
+  <p style="text-align:left">
+    Escreva um link por linha neste formato:<br>
+    <b>Nome | Link</b>
+  </p>
+
+  <textarea id="entrada" placeholder="YouTube | https://youtube.com
+Roblox | https://roblox.com
+Meu site | https://exemplo.com"></textarea>
+
+  <button class="add" onclick="adicionar()">＋ SALVAR LINKS</button>
+
+  <h3>📚 Meus links salvos</h3>
+  <div id="lista"></div>
+</div>
+
+<script>
+const chave = "meuBlocoDeLinksV1";
+let links = [];
+
+try {
+  const dados = JSON.parse(localStorage.getItem(chave) || "[]");
+  if (Array.isArray(dados)) links = dados.filter(
+    x => x && typeof x.nome === "string" &&
+    typeof x.url === "string"
+  );
+} catch(e) { links = []; }
+
+function enderecoSeguro(url) {
+  try {
+    const u = new URL(url);
+    return u.protocol === "https:" || u.protocol === "http:";
+  } catch(e) { return false; }
+}
+
+function adicionar() {
+  const texto = document.getElementById("entrada").value.trim();
+  if (!texto) {
+    alert("Escreva pelo menos um link!");
+    return;
+  }
+
+  const linhas = texto.split("\n");
+  let quantidade = 0;
+
+  linhas.forEach(linha => {
+    const partes = linha.split("|");
+    if (partes.length < 2) return;
+
+    const nome = partes.shift().trim();
+    const url = partes.join("|").trim();
+
+    if (!nome || !enderecoSeguro(url)) return;
+
+    links.push({nome, url});
+    quantidade++;
+  });
+
+  if (quantidade === 0) {
+    alert("Formato inválido! Use: Nome | https://site.com");
+    return;
+  }
+
+  salvar();
+  document.getElementById("entrada").value = "";
+  alert(quantidade + " link(s) salvo(s)!");
+}
+
+function salvar() {
+  try {
+    localStorage.setItem(chave, JSON.stringify(links));
+    mostrar();
+  } catch(e) {
+    alert("Não foi possível salvar. O armazenamento pode estar cheio.");
+  }
+}
+
+function mostrar() {
+  const lista = document.getElementById("lista");
+  lista.innerHTML = "";
+
+  if (links.length === 0) {
+    lista.innerHTML = '<div class="vazio">Nenhum link salvo ainda.</div>';
+    return;
+  }
+
+  links.forEach((item, i) => {
+    const caixa = document.createElement("div");
+    caixa.className = "item";
+
+    const nome = document.createElement("div");
+    nome.className = "nome";
+    nome.textContent = item.nome;
+
+    const url = document.createElement("div");
+    url.className = "url";
+    url.textContent = item.url;
+
+    const abrir = document.createElement("button");
+    abrir.className = "abrir";
+    abrir.textContent = "🔗 ABRIR";
+    abrir.onclick = () => {
+      if (enderecoSeguro(item.url)) {
+        window.open(item.url, "_blank", "noopener,noreferrer");
+      }
+    };
+
+    const apagar = document.createElement("button");
+    apagar.className = "apagar";
+    apagar.textContent = "🗑 APAGAR";
+    apagar.onclick = () => {
+      if (confirm("Apagar " + item.nome + "?")) {
+        links.splice(i, 1);
+        salvar();
+      }
+    };
+
+    caixa.append(nome, url, abrir, apagar);
+    lista.appendChild(caixa);
+  });
+}
+
+mostrar();
+</script>
+</body>
+</html>
