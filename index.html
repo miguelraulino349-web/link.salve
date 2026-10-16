@@ -3,166 +3,234 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Meu Bloco de Links</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Link.Salve</title>
 <style>
 *{box-sizing:border-box}
 body{
-  margin:0;padding:20px;
-  background:#0d0d16;color:white;
-  font-family:Arial,sans-serif;
+ margin:0;background:#06111f;color:#fff;
+ font-family:Arial,sans-serif;padding:18px;
 }
 .container{max-width:600px;margin:auto}
-h1{text-align:center;color:#a78bfa}
-p{color:#b8b8c9;text-align:center}
-textarea{
-  width:100%;height:150px;padding:14px;
-  background:#191927;color:white;
-  border:1px solid #383850;border-radius:12px;
-  font-size:15px;resize:vertical;
+header{
+ text-align:center;padding:25px 10px;
+ background:linear-gradient(135deg,#063b77,#0878e8);
+ border-radius:18px;margin-bottom:22px;
+ box-shadow:0 5px 25px #0878e844;
 }
+.logo{font-size:35px}
+h1{margin:8px 0;font-size:28px}
+header p{margin:0;color:#d6eaff}
+.card{
+ background:#0d1e32;border:1px solid #183b60;
+ padding:17px;border-radius:15px;margin-bottom:18px;
+}
+h2{font-size:18px;margin:0 0 14px}
+label{display:block;margin:12px 0 7px;color:#b9d8ff}
+input,textarea{
+ width:100%;padding:13px;border-radius:10px;
+ border:1px solid #24517c;background:#071629;
+ color:white;font-size:15px;outline:none;
+}
+textarea{height:110px;resize:vertical}
+input:focus,textarea:focus{border-color:#1689ff}
 button{
-  border:0;border-radius:9px;padding:12px;
-  font-weight:bold;cursor:pointer;
+ border:0;border-radius:10px;padding:12px;
+ font-weight:bold;cursor:pointer;
 }
-.add{width:100%;margin:10px 0;background:#8b5cf6;color:white}
-.item{
-  background:#191927;padding:14px;margin:12px 0;
-  border:1px solid #33334a;border-radius:12px;
-  overflow-wrap:anywhere;
+.primary{
+ background:#0878e8;color:white;width:100%;margin-top:12px;
 }
-.nome{font-weight:bold;font-size:17px;margin-bottom:8px}
-.url{color:#aaaacc;font-size:12px;margin-bottom:12px}
-.abrir{background:#22c55e;color:#07150b}
-.apagar{background:#ef4444;color:white;float:right}
-.vazio{text-align:center;color:#777;margin-top:25px}
+.primary:active{background:#0058b8}
+.link-card{
+ background:#0d1e32;border:1px solid #1b4168;
+ border-radius:13px;padding:15px;margin-bottom:12px;
+ overflow-wrap:anywhere;
+}
+.link-title{font-size:17px;font-weight:bold;margin-bottom:8px}
+.link-url{font-size:12px;color:#9db8d7;margin-bottom:14px}
+.actions{display:flex;gap:8px;flex-wrap:wrap}
+.actions button{flex:1;min-width:75px}
+.open{background:#0878e8;color:white}
+.edit{background:#163c60;color:#d9ecff}
+.delete{background:#572333;color:#ffb9c5}
+.empty{text-align:center;color:#8ca6c4;padding:25px 5px}
+.count{color:#9fcaff;font-size:13px;margin-bottom:12px}
+footer{text-align:center;color:#607e9f;font-size:12px;padding:20px}
 </style>
 </head>
 <body>
 <div class="container">
-  <h1>🔗 Meu Bloco de Links</h1>
-  <p>Salve seus links favoritos em um só lugar!</p>
 
-  <h3>📝 Adicionar links</h3>
-  <p style="text-align:left">
-    Escreva um link por linha neste formato:<br>
-    <b>Nome | Link</b>
-  </p>
+<header>
+ <div class="logo">🔗</div>
+ <h1>Link.Salve</h1>
+ <p>Seu espaço para guardar links favoritos</p>
+</header>
 
-  <textarea id="entrada" placeholder="YouTube | https://youtube.com
-Roblox | https://roblox.com
-Meu site | https://exemplo.com"></textarea>
+<div class="card">
+ <h2>＋ Adicionar link</h2>
 
-  <button class="add" onclick="adicionar()">＋ SALVAR LINKS</button>
+ <label for="nome">Nome do link</label>
+ <input id="nome" placeholder="Ex.: Meu site">
 
-  <h3>📚 Meus links salvos</h3>
-  <div id="lista"></div>
+ <label for="url">Endereço do site</label>
+ <input id="url" placeholder="https://exemplo.com"
+        inputmode="url">
+
+ <button class="primary" id="salvar">💾 SALVAR LINK</button>
+ <button class="primary" id="cancelar"
+ style="display:none;background:#29425c">
+ Cancelar edição
+ </button>
+</div>
+
+<div class="card">
+ <h2>📚 Meus links</h2>
+ <div class="count" id="contador">0 links salvos</div>
+ <div id="lista"></div>
+</div>
+
+<footer>Link.Salve • Seus links em um só lugar 💙</footer>
 </div>
 
 <script>
-const chave = "meuBlocoDeLinksV1";
+const $ = id => document.getElementById(id);
+const CHAVE = "linkSalveAzul_v1";
 let links = [];
+let editando = -1;
 
 try {
-  const dados = JSON.parse(localStorage.getItem(chave) || "[]");
-  if (Array.isArray(dados)) links = dados.filter(
-    x => x && typeof x.nome === "string" &&
-    typeof x.url === "string"
+ const dados = JSON.parse(localStorage.getItem(CHAVE) || "[]");
+ if(Array.isArray(dados)) {
+  links = dados.filter(x =>
+   x && typeof x.nome === "string" &&
+   typeof x.url === "string"
   );
-} catch(e) { links = []; }
+ }
+} catch(e) {}
 
-function enderecoSeguro(url) {
-  try {
-    const u = new URL(url);
-    return u.protocol === "https:" || u.protocol === "http:";
-  } catch(e) { return false; }
+function validarURL(valor) {
+ try {
+  const u = new URL(valor);
+  return u.protocol === "https:" || u.protocol === "http:";
+ } catch(e) {
+  return false;
+ }
 }
 
-function adicionar() {
-  const texto = document.getElementById("entrada").value.trim();
-  if (!texto) {
-    alert("Escreva pelo menos um link!");
-    return;
-  }
-
-  const linhas = texto.split("\n");
-  let quantidade = 0;
-
-  linhas.forEach(linha => {
-    const partes = linha.split("|");
-    if (partes.length < 2) return;
-
-    const nome = partes.shift().trim();
-    const url = partes.join("|").trim();
-
-    if (!nome || !enderecoSeguro(url)) return;
-
-    links.push({nome, url});
-    quantidade++;
-  });
-
-  if (quantidade === 0) {
-    alert("Formato inválido! Use: Nome | https://site.com");
-    return;
-  }
-
-  salvar();
-  document.getElementById("entrada").value = "";
-  alert(quantidade + " link(s) salvo(s)!");
+function guardar() {
+ try {
+  localStorage.setItem(CHAVE, JSON.stringify(links));
+  mostrar();
+  return true;
+ } catch(e) {
+  alert("Não foi possível salvar os dados neste navegador.");
+  return false;
+ }
 }
 
-function salvar() {
-  try {
-    localStorage.setItem(chave, JSON.stringify(links));
-    mostrar();
-  } catch(e) {
-    alert("Não foi possível salvar. O armazenamento pode estar cheio.");
-  }
+function limparFormulario() {
+ $("nome").value = "";
+ $("url").value = "";
+ editando = -1;
+ $("salvar").textContent = "💾 SALVAR LINK";
+ $("cancelar").style.display = "none";
 }
+
+$("salvar").addEventListener("click", () => {
+ const nome = $("nome").value.trim();
+ let url = $("url").value.trim();
+
+ if(!nome || !url) {
+  alert("Preencha o nome e o endereço!");
+  return;
+ }
+
+ if(!/^https?:\/\//i.test(url)) {
+  url = "https://" + url;
+ }
+
+ if(!validarURL(url)) {
+  alert("Digite um endereço válido, como https://google.com");
+  return;
+ }
+
+ if(editando === -1) {
+  links.unshift({nome,url});
+ } else {
+  links[editando] = {nome,url};
+ }
+
+ if(guardar()) limparFormulario();
+});
+
+$("cancelar").addEventListener("click", limparFormulario);
 
 function mostrar() {
-  const lista = document.getElementById("lista");
-  lista.innerHTML = "";
+ const lista = $("lista");
+ lista.replaceChildren();
+ $("contador").textContent =
+  links.length + (links.length === 1 ? " link salvo" : " links salvos");
 
-  if (links.length === 0) {
-    lista.innerHTML = '<div class="vazio">Nenhum link salvo ainda.</div>';
-    return;
-  }
+ if(!links.length) {
+  const vazio = document.createElement("div");
+  vazio.className = "empty";
+  vazio.textContent = "🔎 Nenhum link salvo ainda.";
+  lista.appendChild(vazio);
+  return;
+ }
 
-  links.forEach((item, i) => {
-    const caixa = document.createElement("div");
-    caixa.className = "item";
+ links.forEach((item,i) => {
+  const caixa = document.createElement("div");
+  caixa.className = "link-card";
 
-    const nome = document.createElement("div");
-    nome.className = "nome";
-    nome.textContent = item.nome;
+  const titulo = document.createElement("div");
+  titulo.className = "link-title";
+  titulo.textContent = "🔗 " + item.nome;
 
-    const url = document.createElement("div");
-    url.className = "url";
-    url.textContent = item.url;
+  const endereco = document.createElement("div");
+  endereco.className = "link-url";
+  endereco.textContent = item.url;
 
-    const abrir = document.createElement("button");
-    abrir.className = "abrir";
-    abrir.textContent = "🔗 ABRIR";
-    abrir.onclick = () => {
-      if (enderecoSeguro(item.url)) {
-        window.open(item.url, "_blank", "noopener,noreferrer");
-      }
-    };
+  const acoes = document.createElement("div");
+  acoes.className = "actions";
 
-    const apagar = document.createElement("button");
-    apagar.className = "apagar";
-    apagar.textContent = "🗑 APAGAR";
-    apagar.onclick = () => {
-      if (confirm("Apagar " + item.nome + "?")) {
-        links.splice(i, 1);
-        salvar();
-      }
-    };
+  const abrir = document.createElement("button");
+  abrir.className = "open";
+  abrir.textContent = "ABRIR";
+  abrir.onclick = () => {
+   if(validarURL(item.url)) window.open(item.url,"_blank","noopener");
+  };
 
-    caixa.append(nome, url, abrir, apagar);
-    lista.appendChild(caixa);
-  });
+  const editar = document.createElement("button");
+  editar.className = "edit";
+  editar.textContent = "EDITAR";
+  editar.onclick = () => {
+   $("nome").value = item.nome;
+   $("url").value = item.url;
+   editando = i;
+   $("salvar").textContent = "💾 SALVAR ALTERAÇÕES";
+   $("cancelar").style.display = "block";
+   window.scrollTo({top:0,behavior:"smooth"});
+  };
+
+  const apagar = document.createElement("button");
+  apagar.className = "delete";
+  apagar.textContent = "APAGAR";
+  apagar.onclick = () => {
+   if(confirm("Apagar o link " + item.nome + "?")) {
+    links.splice(i,1);
+    if(editando === i) limparFormulario();
+    else if(editando > i) editando--;
+    guardar();
+   }
+  };
+
+  acoes.append(abrir,editar,apagar);
+  caixa.append(titulo,endereco,acoes);
+  lista.appendChild(caixa);
+ });
 }
 
 mostrar();
